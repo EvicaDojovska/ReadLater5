@@ -1,25 +1,28 @@
 ﻿using Entity;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Services;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Threading.Tasks;
 
 namespace ReadLater5.Controllers
 {
+    [Authorize]
     public class CategoriesController : Controller
     {
-        ICategoryService _categoryService;
-        public CategoriesController(ICategoryService categoryService)
+        private readonly ICategoryService _categoryService;
+        private readonly UserManager<IdentityUser> _userManager;
+
+        public CategoriesController(ICategoryService categoryService, UserManager<IdentityUser> userManager)
         {
             _categoryService = categoryService;
+            _userManager = userManager;
         }
+
         // GET: Categories
         public IActionResult Index()
         {
-            List<Category> model = _categoryService.GetCategories();
+            var userId = _userManager.GetUserId(User);
+            var model = _categoryService.GetUserCategories(userId);
             return View(model);
         }
 
@@ -30,11 +33,14 @@ namespace ReadLater5.Controllers
             {
                 return new StatusCodeResult(Microsoft.AspNetCore.Http.StatusCodes.Status400BadRequest);
             }
-            Category category = _categoryService.GetCategory((int)id);
+
+            var userId = _userManager.GetUserId(User);
+            var category = _categoryService.GetUserCategory((int)id, userId);
             if (category == null)
             {
                 return new StatusCodeResult(Microsoft.AspNetCore.Http.StatusCodes.Status404NotFound);
             }
+
             return View(category);
 
         }
@@ -54,6 +60,7 @@ namespace ReadLater5.Controllers
         {
             if (ModelState.IsValid)
             {
+                category.UserId = _userManager.GetUserId(User);
                 _categoryService.CreateCategory(category);
                 return RedirectToAction("Index");
             }
@@ -68,11 +75,14 @@ namespace ReadLater5.Controllers
             {
                 return new StatusCodeResult(Microsoft.AspNetCore.Http.StatusCodes.Status400BadRequest);
             }
-            Category category = _categoryService.GetCategory((int)id);
+
+            var userId = _userManager.GetUserId(User);
+            var category = _categoryService.GetUserCategory((int)id, userId);
             if (category == null)
             {
                 return new StatusCodeResult(Microsoft.AspNetCore.Http.StatusCodes.Status404NotFound);
             }
+
             return View(category);
         }
 
@@ -98,11 +108,14 @@ namespace ReadLater5.Controllers
             {
                 return new StatusCodeResult(Microsoft.AspNetCore.Http.StatusCodes.Status400BadRequest);
             }
-            Category category = _categoryService.GetCategory((int)id);
+
+            var userId = _userManager.GetUserId(User);
+            var category = _categoryService.GetUserCategory((int)id, userId);
             if (category == null)
             {
                 return new StatusCodeResult(Microsoft.AspNetCore.Http.StatusCodes.Status404NotFound);
             }
+
             return View(category);
         }
 
@@ -111,9 +124,26 @@ namespace ReadLater5.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult DeleteConfirmed(int id)
         {
-            Category category = _categoryService.GetCategory(id);
-            _categoryService.DeleteCategory(category);
+            var userId = _userManager.GetUserId(User);
+            var category = _categoryService.GetUserCategory((int)id, userId);
+
+            if (category != null) 
+                _categoryService.DeleteCategory(category);
+
             return RedirectToAction("Index");
+        }
+
+        [HttpPost]
+        public IActionResult CreateAjax(string name)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                return BadRequest("Category name cannot be null or empty string.");
+            }
+
+            var userId = _userManager.GetUserId(User);
+            var category = _categoryService.CreateCategory(new Category { Name = name, UserId = userId });
+            return Json(new { id = category.Id, name = category.Name, userId = userId });
         }
     }
 }

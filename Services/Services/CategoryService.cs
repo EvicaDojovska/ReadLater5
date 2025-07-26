@@ -1,53 +1,56 @@
 ﻿using Data;
 using Entity;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Services
 {
     public class CategoryService : ICategoryService
     {
-        private ReadLaterDataContext _ReadLaterDataContext;
+        private readonly ReadLaterDataContext _readLaterDataContext;
+
         public CategoryService(ReadLaterDataContext readLaterDataContext) 
         {
-            _ReadLaterDataContext = readLaterDataContext;            
+            _readLaterDataContext = readLaterDataContext;            
         }
 
         public Category CreateCategory(Category category)
         {
-            _ReadLaterDataContext.Add(category);
-            _ReadLaterDataContext.SaveChanges();
+            _readLaterDataContext.Add(category);
+            _readLaterDataContext.SaveChanges();
             return category;
         }
 
         public void UpdateCategory(Category category)
         {
-            _ReadLaterDataContext.Update(category);
-            _ReadLaterDataContext.SaveChanges();
+            _readLaterDataContext.Update(category);
+            _readLaterDataContext.SaveChanges();
         }
 
         public List<Category> GetCategories()
         {
-            return _ReadLaterDataContext.Categories.ToList();
+            return _readLaterDataContext.Categories.ToList();
         }
 
-        public Category GetCategory(int Id)
+        public Category? GetCategory(int id)
         {
-            return _ReadLaterDataContext.Categories.Where(c => c.ID == Id).FirstOrDefault();
+            return _readLaterDataContext.Categories.FirstOrDefault(c => c.Id == id);
         }
 
-        public Category GetCategory(string Name)
+        public Category? GetUserCategory(int id, string userId)
         {
-            return _ReadLaterDataContext.Categories.Where(c => c.Name == Name).FirstOrDefault();
+            return _readLaterDataContext.Categories.FirstOrDefault(x => x.Id == id && x.UserId == userId);
         }
 
         public void DeleteCategory(Category category)
         {
-            _ReadLaterDataContext.Categories.Remove(category);
-            _ReadLaterDataContext.SaveChanges();
+            _readLaterDataContext.Categories.Remove(category);
+            _readLaterDataContext.SaveChanges();
+        }
+
+        public List<Category> GetUserCategories(string userId)
+        {
+            return _readLaterDataContext.Categories.Where(x => x.UserId == userId).ToList();
         }
     }
 }

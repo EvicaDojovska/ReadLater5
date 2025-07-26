@@ -1,0 +1,88 @@
+﻿@model Entity.Bookmark
+
+@{
+    ViewBag.Title = "Create";
+}
+
+<h2>Create Bookmark</h2>
+
+@using (Html.BeginForm())
+{
+    @Html.AntiForgeryToken()
+
+    <div class="form-horizontal">
+        <h4>Bookmark</h4>
+        <hr />
+        @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+        
+        <div class="form-group">
+            @Html.LabelFor(model => model.Url, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-10">
+                @Html.EditorFor(model => model.Url, new { htmlAttributes = new { @class = "form-control" } })
+                @Html.ValidationMessageFor(model => model.Url, "", new { @class = "text-danger" })
+            </div>
+        </div>
+
+        <div class="form-group">
+            @Html.LabelFor(model => model.ShortDescription, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-10">
+                @Html.EditorFor(model => model.ShortDescription, new { htmlAttributes = new { @class = "form-control" } })
+                @Html.ValidationMessageFor(model => model.ShortDescription, "", new { @class = "text-danger" })
+            </div>
+        </div>
+        
+        <div class="form-group">
+            @Html.LabelFor(model => model.CategoryId, "Category", htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-10">
+                <div class="input-group mb-3">
+                    @Html.DropDownList("CategoryId", null, "Select Category", new { @class = "form-control", id = "CategoryId" })
+                    <input type="text" id="NewCategoryName" class="form-control" placeholder="New category name" />
+                    <button type="button" id="AddCategoryBtn" class="btn btn-primary">Add</button>
+                </div>
+                <span id="CategoryMessage" class="text-success"></span>
+
+                @Html.ValidationMessageFor(model => model.CategoryId, "", new { @class = "text-danger" })
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <div class="col-md-offset-2 cik-md-10">
+                <input type="submit" value="Create" class="btn btn-default" />
+            </div>
+        </div>
+    </div>
+}
+
+<div>
+    @Html.ActionLink("Back to List", "Index")
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $('#AddCategoryBtn').click(function () {
+                var newCategory = $('#NewCategoryName').val().trim();
+                if (!newCategory) {
+                    $('#CategoryMessage').text('Enter a category name.');
+                    return;
+                }
+                $.ajax({
+                    url: '/Categories/CreateAjax',
+                    type: 'POST',
+                    data: { name: newCategory },
+                    success: function (response) {
+                        $('#CategoryId').append(new Option(response.name, response.id));
+
+                        @*automatically selects the new category*@
+                        $('#CategoryId').val(response.id);
+                        $('#CategoryMessage').text('Category added.');
+                        $('#NewCategoryName').val('');
+                    },
+                    error: function (xhr) {
+                        $('#CategoryMessage').text('Error: ' + xhr.responseText);
+                    }
+                });
+            });
+        });
+    </script>
+}
