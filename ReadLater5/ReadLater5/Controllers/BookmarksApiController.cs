@@ -1,10 +1,10 @@
-﻿using System;
-using Entity;
+﻿using Entity;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Services;
+using System;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace ReadLater5.Controllers
@@ -15,20 +15,17 @@ namespace ReadLater5.Controllers
     public class BookmarksApiController : ControllerBase
     {
         private readonly IBookmarkService _bookmarkService;
-        private readonly UserManager<IdentityUser> _userManager;
 
         public BookmarksApiController(
-            IBookmarkService bookmarkService,
-            UserManager<IdentityUser> userManager)
+            IBookmarkService bookmarkService)
         {
             _bookmarkService = bookmarkService;
-            _userManager = userManager;
         }
 
         [HttpGet]
         public async Task<IActionResult> GetBookmarks()
         {
-            var userId = _userManager.GetUserId(User);
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var bookmarks = await _bookmarkService.GetUserBookmarks(userId);
 
             return Ok(bookmarks);
@@ -38,7 +35,7 @@ namespace ReadLater5.Controllers
         public async Task<IActionResult> GetBookmark(int id)
         {
             var bookmark = await _bookmarkService.GetBookmark(id);
-            var userId = _userManager.GetUserId(User);
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
             if (bookmark == null || bookmark.UserId != userId)
             {
@@ -51,8 +48,10 @@ namespace ReadLater5.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateBookmark([FromBody] Bookmark bookmark)
         {
-            bookmark.UserId = _userManager.GetUserId(User);
+            bookmark.UserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             bookmark.CreateDate = DateTime.UtcNow;
+            bookmark.ShortCode = Guid.NewGuid().ToString();
+
             var updatedBookmark = await _bookmarkService.CreateBookmark(bookmark);
 
             return Ok(updatedBookmark);
@@ -62,7 +61,7 @@ namespace ReadLater5.Controllers
         public async Task<IActionResult> UpdateBookmark(int id, [FromBody] Bookmark updatedBookmark)
         {
             var bookmark = await _bookmarkService.GetBookmark(id);
-            var userId = _userManager.GetUserId(User);
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
             if (bookmark == null || bookmark.UserId != userId)
                 return NotFound();
@@ -80,7 +79,7 @@ namespace ReadLater5.Controllers
         public async Task<IActionResult> DeleteBookmark(int id)
         {
             var bookmark = await _bookmarkService.GetBookmark(id);
-            var userId = _userManager.GetUserId(User);
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
             if (bookmark == null || bookmark.UserId != userId)
                 return NotFound();

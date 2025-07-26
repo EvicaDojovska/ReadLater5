@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Services;
 using System;
 using System.Threading.Tasks;
+using ReadLater5.Models;
 
 namespace ReadLater5.Controllers
 {
@@ -16,8 +17,8 @@ namespace ReadLater5.Controllers
         private readonly ICategoryService _categoryService;
         private readonly UserManager<IdentityUser> _userManager;
 
-        public BookmarksController(IBookmarkService bookmarkService, 
-            ICategoryService categoryService, 
+        public BookmarksController(IBookmarkService bookmarkService,
+            ICategoryService categoryService,
             UserManager<IdentityUser> userManager)
         {
             _bookmarkService = bookmarkService;
@@ -27,14 +28,35 @@ namespace ReadLater5.Controllers
 
         public async Task<IActionResult> Index()
         {
-            var userId =  _userManager.GetUserId(User);
+            var userId = _userManager.GetUserId(User);
             var model = await _bookmarkService.GetUserBookmarks(userId);
             return View(model);
         }
 
         public async Task<IActionResult> Details(int? id)
         {
-            return await BookmarkChecks(id, "Details");
+            if (id == null)
+            {
+                return BadRequest("The ID property is required.");
+            }
+
+            var bookmark = await _bookmarkService.GetBookmark((int)id);
+            var userId = _userManager.GetUserId(User);
+
+            if (bookmark == null || bookmark.UserId != userId)
+            {
+                return NotFound();
+            }
+
+            var bookmarkClick = new BookmarkClick()
+            {
+                BookmarkId = (int)id,
+                ClickedAt = DateTime.UtcNow
+            };
+
+            await _bookmarkService.LogBookmarkClick(bookmarkClick);
+
+            return View(bookmark);
         }
 
         public IActionResult Create()
@@ -53,8 +75,11 @@ namespace ReadLater5.Controllers
                 return View(bookmark);
             }
 
+            // NOTE: For a better solution, the URL format needs to be validated here.
+
             bookmark.CreateDate = DateTime.UtcNow;
             bookmark.UserId = _userManager.GetUserId(User);
+            bookmark.ShortCode = Guid.NewGuid().ToString();
             await _bookmarkService.CreateBookmark(bookmark);
 
             return RedirectToAction("Index");
@@ -110,6 +135,40 @@ namespace ReadLater5.Controllers
 
             await _bookmarkService.DeleteBookmark(bookmark);
             return RedirectToAction("Index");
+        }
+
+
+        // NOTE: The route should be short, but it is as it is for clarity.
+        [AllowAnonymous]
+        [HttpGet("short-url/{code}")]
+        public async Task<IActionResult> NavigateToUrl(string code)
+        {
+            var bookmark = await _bookmarkService.GetBookmarkByCode(code);
+            if (bookmark == null)
+                return NotFound();
+
+            await _bookmarkService.LogBookmarkClick(new BookmarkClick
+            {
+                BookmarkId = bookmark.Id,
+                ClickedAt = DateTime.UtcNow,
+                IsClickedByShortUrl = true
+            });
+
+            return Redirect(bookmark.Url);
+        }
+
+        [Authorize]
+        public async Task<IActionResult> Dashboard()
+        {
+            var userId = _userManager.GetUserId(User);
+
+            var model = new DashboardModel()
+            {
+                UserStatistics = await _bookmarkService.GetBookmarkStatistics(userId),
+                GlobalStatistics = await _bookmarkService.GetBookmarkStatistics()
+            };
+
+            return View(model);
         }
 
         private async Task<IActionResult> BookmarkChecks(int? id, string viewName)

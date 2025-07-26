@@ -18,5 +18,6 @@ namespace Data
 
         public DbSet<Category> Categories { get; set; }
         public DbSet<Bookmark> Bookmarks { get; set; }
+        public DbSet<BookmarkClick> BookmarkClicks { get; set; }
     }
 }

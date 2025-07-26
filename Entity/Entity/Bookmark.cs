@@ -22,5 +22,7 @@ namespace Entity
         public DateTime CreateDate { get; set; }
 
         public string UserId { get; set; }
+
+        public string ShortCode { get; set; }
     }
 }

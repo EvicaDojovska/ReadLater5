@@ -1,0 +1,53 @@
+﻿@model ReadLater5.Models.DashboardModel
+
+<h2>Your Bookmark Statistics</h2>
+<table class="table table-striped">
+    <thead>
+    <tr>
+        <th>Bookmark</th>
+        <th>Total Clicks</th>
+        <th>Short URL Clicks</th>
+        <th>Today</th>
+        <th>This Week</th>
+    </tr>
+    </thead>
+    <tbody>
+    @foreach (var stat in Model.UserStatistics)
+    {
+        <tr>
+            <td>@stat.BookmarkUrl</td>
+            <td>@stat.TotalClicks</td>
+            <td>@stat.ClickedByShortUrl</td>
+            <td>@stat.ClickedToday</td>
+            <td>@stat.ClickedThisWeek</td>
+        </tr>
+    }
+    </tbody>
+</table>
+
+<hr />
+
+<h2>Global Bookmarks Statistics</h2>
+<table class="table table-striped">
+    <thead>
+    <tr>
+        <th>Bookmark</th>
+        <th>Total Clicks</th>
+        <th>Short URL Clicks</th>
+        <th>Today</th>
+        <th>This Week</th>
+    </tr>
+    </thead>
+    <tbody>
+    @foreach (var stat in Model.GlobalStatistics)
+    {
+        <tr>
+            <td>@stat.BookmarkUrl</td>
+            <td>@stat.TotalClicks</td>
+            <td>@stat.ClickedByShortUrl</td>
+            <td>@stat.ClickedToday</td>
+            <td>@stat.ClickedThisWeek</td>
+        </tr>
+    }
+    </tbody>
+</table>
