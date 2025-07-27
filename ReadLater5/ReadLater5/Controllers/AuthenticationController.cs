@@ -27,10 +27,10 @@ namespace ReadLater5.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] UserModel model)
         {
-            var userCheck = await _userManager.FindByNameAsync(model.Username);
+            var userCheck = await _userManager.FindByEmailAsync(model.Email);
             if (userCheck != null)
             {
-                return BadRequest("Username is taken.");
+                return BadRequest("User already exists.");
             }
 
             var user = new IdentityUser()
