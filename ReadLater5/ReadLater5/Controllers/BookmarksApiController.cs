@@ -52,9 +52,9 @@ namespace ReadLater5.Controllers
             bookmark.CreateDate = DateTime.UtcNow;
             bookmark.ShortCode = Guid.NewGuid().ToString();
 
-            var updatedBookmark = await _bookmarkService.CreateBookmark(bookmark);
+            var createdBookmark = await _bookmarkService.CreateBookmark(bookmark);
 
-            return Ok(updatedBookmark);
+            return Ok(createdBookmark);
         }
 
         [HttpPut("{id}")]
