@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
-using ReadLater5.Models;
 
 namespace Services
 {
@@ -95,6 +94,28 @@ namespace Services
                     ClickedThisWeek = y.Count(x => x.ClickedAt >= weekAgo)
                 })
                 .ToListAsync();
+        }
+
+        public async Task<Dictionary<string, string>> GetMostPopularUrl()
+        {
+            var mostPopularUrl = await _readLaterDataContext.BookmarkClicks
+                .GroupBy(x => x.Bookmark.Url)
+                .Select(y => new
+                {
+                    Url = y.Key,
+                    TotalClicks = y.Count()
+                })
+                .OrderByDescending(x => x.TotalClicks)
+                .FirstOrDefaultAsync();
+
+            // NOTE: Returning an empty dictionary if no URL is found because outside services are going to use the widget, and it doesn't make sense to throw an exception or return an error.
+            return mostPopularUrl == null
+                ? new Dictionary<string, string>()
+                : new Dictionary<string, string>
+                {
+                    { "url", mostPopularUrl.Url },
+                    { "clicks", mostPopularUrl.TotalClicks.ToString() }
+                };
         }
     }
 }

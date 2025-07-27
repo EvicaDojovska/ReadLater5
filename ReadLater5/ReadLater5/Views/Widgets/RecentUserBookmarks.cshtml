@@ -1,0 +1,30 @@
+﻿@model List<Entity.Bookmark>
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0; font-size:14px; }
+        .container { padding: 10px; border: 1px solid #ccc; width: 250px; background: #f9f9f9; }
+        .title { font-size: 16px; margin-bottom: 8px; }
+        .item { margin-bottom: 5px; }
+        .item a { text-decoration: none; color: #007bff; }
+        .date { font-size: 12px; color: #666; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="title">Recent 5 Bookmarks</div>
+    @foreach (var b in Model)
+    {
+        <div class="item">
+            <a href="@b.Url" target="_blank">@b.Url</a>
+            <div class="date">Created: @b.CreateDate.ToShortDateString()</div>
+        </div>
+    }
+</div>
+</body>
+</html>

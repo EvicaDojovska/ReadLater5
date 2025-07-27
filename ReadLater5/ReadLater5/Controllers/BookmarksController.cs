@@ -3,10 +3,11 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using ReadLater5.Models;
 using Services;
 using System;
+using System.Linq;
 using System.Threading.Tasks;
-using ReadLater5.Models;
 
 namespace ReadLater5.Controllers
 {
@@ -169,6 +170,45 @@ namespace ReadLater5.Controllers
             };
 
             return View(model);
+        }
+
+        /** NOTE: For this task, I chose to experiment with the iframe widget because it is faster to implement.
+            I am aware that JavaScript  widgets are considered better for production, especially for custom styling and deeper customization.
+            For the time being, the iframe approach is the most practical choice, but in a real-world project with more time, I would choose and experiment with JavaScript widgets.
+        **/
+        [AllowAnonymous]
+        public async Task<IActionResult> PopularBookmarksToday()
+        {
+            var bookmarks = await _bookmarkService.GetBookmarkStatistics();
+            var topThree = bookmarks
+                .OrderByDescending(x => x.ClickedToday)
+                .Take(3)
+                .ToList();
+
+            return View("~/Views/Widgets/PopularBookmarksToday.cshtml", topThree);
+        }
+
+        [AllowAnonymous]
+        public async Task<IActionResult> RecentUserBookmarks(string userId)
+        {
+            if (string.IsNullOrEmpty(userId))
+                return BadRequest("User Id is required.");
+
+            var bookmarks = await _bookmarkService.GetUserBookmarks(userId);
+
+            var recent = bookmarks
+                .OrderByDescending(x => x.CreateDate)
+                .Take(5)
+                .ToList();
+
+            return View("~/Views/Widgets/RecentUserBookmarks.cshtml", recent);
+        }
+
+        [AllowAnonymous]
+        public async Task<IActionResult> MostPopularUrl()
+        {
+            var url = await _bookmarkService.GetMostPopularUrl();
+            return View("~/Views/Widgets/MostPopularUrl.cshtml", url);
         }
 
         private async Task<IActionResult> BookmarkChecks(int? id, string viewName)
