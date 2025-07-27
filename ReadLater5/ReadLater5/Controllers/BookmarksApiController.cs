@@ -6,6 +6,7 @@ using Services;
 using System;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using ReadLater5.Models;
 
 namespace ReadLater5.Controllers
 {
@@ -46,11 +47,19 @@ namespace ReadLater5.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateBookmark([FromBody] Bookmark bookmark)
+        public async Task<IActionResult> CreateBookmark([FromBody] BookmarkModel model)
         {
-            bookmark.UserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            bookmark.CreateDate = DateTime.UtcNow;
-            bookmark.ShortCode = Guid.NewGuid().ToString();
+            var bookmark = new Bookmark
+            {
+                Url = model.Url,
+                ShortDescription = model.ShortDescription,
+                CategoryId = model.CategoryId,
+                UserId = User.FindFirstValue(ClaimTypes.NameIdentifier),
+                CreateDate = DateTime.UtcNow,
+                ShortCode = Guid.NewGuid().ToString()
+            };
+
+            // NOTE: For a better approach, an external function may be created to generate a unique short code, instead of using Guid.
 
             var createdBookmark = await _bookmarkService.CreateBookmark(bookmark);
 
@@ -58,7 +67,7 @@ namespace ReadLater5.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateBookmark(int id, [FromBody] Bookmark updatedBookmark)
+        public async Task<IActionResult> UpdateBookmark(int id, [FromBody] BookmarkModel model)
         {
             var bookmark = await _bookmarkService.GetBookmark(id);
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -66,9 +75,9 @@ namespace ReadLater5.Controllers
             if (bookmark == null || bookmark.UserId != userId)
                 return NotFound();
 
-            bookmark.Url = updatedBookmark.Url;
-            bookmark.ShortDescription = updatedBookmark.ShortDescription;
-            bookmark.CategoryId = updatedBookmark.CategoryId;
+            bookmark.Url = model.Url;
+            bookmark.ShortDescription = model.ShortDescription;
+            bookmark.CategoryId = model.CategoryId;
 
             await _bookmarkService.UpdateBookmark(bookmark);
 
